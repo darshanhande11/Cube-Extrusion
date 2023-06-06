@@ -54,40 +54,40 @@ class App {
         //     box.scaling.x += 0.0025;
         // });
 
-        let mouseHit = 1;
+        // let mouseHit = 1;
 
-        scene.onPointerDown = function (evt, pickResult) {
-            var face = pickResult.faceId / 2
-            var facet = 2 * Math.floor(face);
-            console.log("facet::",facet);
-            console.log("mouseHit::",mouseHit);
-            console.log("box", box);
-            if(pickResult.hit && mouseHit == 1) {
-                if(facet == 4 || facet == 6) {
-                    box.scaling.x += 0.1;
-                } else if(facet == 8 || facet == 10) {
-                    box.scaling.y += 0.1;
-                } else if(facet == 0 || facet == 2) {
-                    box.scaling.z += 0.1;
-                }
-                mouseHit = 2;
-            } else if(pickResult.hit && mouseHit == 2) {
-                if(facet == 4 || facet == 6) {
-                    box.scaling.x -= 0.1;
-                } else if(facet == 8 || facet == 10) {
-                    box.scaling.y -= 0.1;
-                } else if(facet == 0 || facet == 2) {
-                    box.scaling.z -= 0.1;
-                }
-                mouseHit = 1;
-            }
-        };
+        // scene.onPointerDown = function (evt, pickResult) {
+        //     var face = pickResult.faceId / 2
+        //     var facet = 2 * Math.floor(face);
+        //     console.log("facet::",facet);
+        //     console.log("mouseHit::",mouseHit);
+        //     console.log("box", box);
+        //     if(pickResult.hit && mouseHit == 1) {
+        //         if(facet == 4 || facet == 6) {
+        //             box.scaling.x += 0.1;
+        //         } else if(facet == 8 || facet == 10) {
+        //             box.scaling.y += 0.1;
+        //         } else if(facet == 0 || facet == 2) {
+        //             box.scaling.z += 0.1;
+        //         }
+        //         mouseHit = 2;
+        //     } else if(pickResult.hit && mouseHit == 2) {
+        //         if(facet == 4 || facet == 6) {
+        //             box.scaling.x -= 0.1;
+        //         } else if(facet == 8 || facet == 10) {
+        //             box.scaling.y -= 0.1;
+        //         } else if(facet == 0 || facet == 2) {
+        //             box.scaling.z -= 0.1;
+        //         }
+        //         mouseHit = 1;
+        //     }
+        // };
 
-        scene.onPointerMove = function (evt, pickResult) {
-            var face = pickResult.faceId / 2;
-            var facet = 2 * Math.floor(face);
+        // scene.onPointerMove = function (evt, pickResult) {
+        //     var face = pickResult.faceId / 2;
+        //     var facet = 2 * Math.floor(face);
 
-        }
+        // }
 
         // add selection panel
         // var advTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
