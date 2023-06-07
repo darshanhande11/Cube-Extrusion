@@ -33,7 +33,6 @@ class App {
         scene.onPointerDown = function (evt, pickResult) {
             var face = pickResult.faceId / 2
             var facet = 2 * Math.floor(face);
-            // console.log("facet::",selectedFacet);
             
             if(mouseHit == 1 && pickResult.hit) {
                 console.log("mouseHit::",mouseHit);
@@ -46,7 +45,7 @@ class App {
                     engine.getRenderHeight(),
                     Matrix.Identity(), scene.getViewMatrix(),
                     scene.getProjectionMatrix());
-                console.log(firstPos);
+                secondPos = firstPos;
             } else if(mouseHit == 2) {
                 console.log("mouseHit::",mouseHit);
                 mouseHit = 1;
@@ -55,19 +54,18 @@ class App {
         };
 
         scene.onPointerMove = function (evt, pickResult) {
-            // var face = pickResult.faceId / 2;
-            // var facet = 2 * Math.floor(face);
-            console.log("selectedFacet::",selectedFacet);
             if(selectedFacet != -1) {
                 console.log(selectedFacet);
+                firstPos = secondPos;
                 secondPos = Vector3.Unproject(
                     new Vector3(scene.pointerX,scene.pointerY,1),
                     engine.getRenderWidth(),
                     engine.getRenderHeight(),
                     Matrix.Identity(), scene.getViewMatrix(),
                     scene.getProjectionMatrix());
+                console.log("firstPos::",firstPos);
+                console.log("secondPos::",secondPos);
                 let dist = Vector3.Distance(firstPos, secondPos);
-                console.log("dist::",dist);
                 if(firstPos.x === secondPos.x || firstPos.y === secondPos.y || firstPos.z === secondPos.z) {
                     return;
                 }
@@ -76,101 +74,71 @@ class App {
                     if(firstPos.z == secondPos.z)
                         return;
                     else if(firstPos.z < secondPos.z) {
-                        box.scaling.z += dist/2e6;
-                        box.position.z += dist/2e6;
+                        box.scaling.z += dist/2e4;
+                        box.position.z += dist/2e4;
                     }
                     else {
-                        box.scaling.z -= dist/2e6;
-                        box.position.z -= dist/2e6;
+                        box.scaling.z -= dist/2e4;
+                        box.position.z -= dist/2e4;
                     }
                 } else if (selectedFacet == 2) {
                     if(firstPos.z == secondPos.z)
                         return;
                     else if(firstPos.z > secondPos.z) {
-                        box.scaling.z += dist/2e6;
-                        box.position.z -= dist/2e6;
+                        box.scaling.z += dist/2e4;
+                        box.position.z -= dist/2e4;
                     }
                     else {
-                        box.scaling.z -= dist/2e6;
-                        box.position.z += dist/2e6;
+                        box.scaling.z -= dist/2e4;
+                        box.position.z += dist/2e4;
                     }
                 } else if (selectedFacet == 4) {
                     if(firstPos.x == secondPos.x)
                         return;
                     else if(firstPos.x < secondPos.x) {
-                        box.scaling.x += dist/2e6;
-                        box.position.x += dist/2e6;
+                        box.scaling.x += dist/2e4;
+                        box.position.x += dist/2e4;
                     }
                     else {
-                        box.scaling.x -= dist/2e6;
-                        box.position.x -= dist/2e6;
+                        box.scaling.x -= dist/2e4;
+                        box.position.x -= dist/2e4;
                     }
                 } else if (selectedFacet == 6) {
                     if(firstPos.x == secondPos.x)
                         return;
                     else if(firstPos.x > secondPos.x) {
-                        box.scaling.x += dist/2e6;
-                        box.position.x -= dist/2e6;
+                        box.scaling.x += dist/2e4;
+                        box.position.x -= dist/2e4;
                     }
                     else {
-                        box.scaling.x -= dist/2e6;
-                        box.position.x += dist/2e6;
+                        box.scaling.x -= dist/2e4;
+                        box.position.x += dist/2e4;
                     }
                 } else if (selectedFacet == 8) {
                     if(firstPos.y == secondPos.y)
                         return;
                     else if(firstPos.y < secondPos.y) {
-                        box.scaling.y += dist/2e6;
-                        box.position.y += dist/2e6;
+                        box.scaling.y += dist/2e4;
+                        box.position.y += dist/2e4;
                     }
                     else {
-                        box.scaling.y -= dist/2e6;
-                        box.position.y -= dist/2e6;
+                        box.scaling.y -= dist/2e4;
+                        box.position.y -= dist/2e4;
                     }
                 } else if (selectedFacet == 10) {
                     if(firstPos.y == secondPos.y)
                         return;
                     else if(firstPos.y > secondPos.y) {
-                        box.scaling.y += dist/2e6;
-                        box.position.y -= dist/2e6;
+                        box.scaling.y += dist/2e4;
+                        box.position.y -= dist/2e4;
                     }
                     else {
-                        box.scaling.y -= dist/2e6;
-                        box.position.y += dist/2e6;
+                        box.scaling.y -= dist/2e4;
+                        box.position.y += dist/2e4;
                     }
                 }
             }
         }
-
-        // add selection panel
-        // var advTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-        // var selectionPanel = new SelectionPanel("customPanel");
-        // selectionPanel.width = 0.25;
-        // selectionPanel.height = 0.48;
-        // selectionPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-        // selectionPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-        // advTexture.addControl(selectionPanel);
-
-        // var resizeToDefault = function() {
-        //     var positions = box.getVerticesData(VertexBuffer.PositionKind);
-        //     var numberOfVertices = positions!.length/3;	
-        //     for(var i = 0; i<numberOfVertices; i++) {
-        //         positions![i*3] = Math.sin(positions![i*3]) * 2;
-        //         positions![i*3+1] = Math.tan(positions![i*3+1]) * 3;
-        //         positions![i*3+2] = Math.cos(positions![i*3+2]) * 4;
-        //     }
-
-        //     box.updateVerticesData(VertexBuffer.PositionKind, positions!);
-        //     box.scaling.x = 1;
-        //     box.scaling.y = 1;
-        //     box.scaling.z = 1;
-        // }
-
-        // add button to resize the cube
-        // var transformGroup = new CheckboxGroup("Transformation");
-	    // transformGroup.addCheckbox("Resize", resizeToDefault);
-
-        // selectionPanel.addGroup(transformGroup);
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
