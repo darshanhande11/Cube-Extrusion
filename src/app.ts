@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, MultiPointerScaleBehavior, BoundingBoxGizmo, UtilityLayerRenderer, Color3, SixDofDragBehavior, VertexBuffer } from "@babylonjs/core";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, MultiPointerScaleBehavior, BoundingBoxGizmo, UtilityLayerRenderer, Color3, SixDofDragBehavior, VertexBuffer, Matrix } from "@babylonjs/core";
 import { SelectionPanel, Control, AdvancedDynamicTexture, CheckboxGroup } from "@babylonjs/gui"
 
 class App {
@@ -17,31 +17,172 @@ class App {
         var engine = new Engine(canvas, true);
         var scene = new Scene(engine);
 
-        // we need a camera to view the scene and ArcRotateCamera allows the camera to be controlled by the user
         var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 4, Math.PI / 4, 2, new Vector3(1, 1, 1), scene);
         camera.attachControl(canvas, true);
-
-        // We need a light source to view the objects in the scene so that different faces of the cube have differenet shades
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
 
-        // We create a box mesh using MeshBuilder class and add it to the scene
-        var box: Mesh = MeshBuilder.CreateBox("box", { width: 1, height: 1, depth: 1, updatable: true }, scene);
+        var boxHeight = 1, boxWidth = 1, boxDepth = 1;
+        var firstPos = new Vector3(0, 0, 0);
+        var secondPos = new Vector3(0, 0, 0);
 
-        // We pass the box mesh to the BoundingBoxGizmo to create a bounding box around it
-        var boundingBox = BoundingBoxGizmo.MakeNotPickableAndWrapInBoundingBox(box);
-        
-        // Create bounding box gizmo
-        var utilLayer = new UtilityLayerRenderer(scene)
-        utilLayer.utilityLayerScene.autoClearDepthAndStencil = true;
-        var gizmo = new BoundingBoxGizmo(Color3.FromHexString("#0984e3"), utilLayer)
-        // this sets the size of the sphere on the edge that is used for rotation of cube around a line parallel to that edge
-        gizmo.rotationSphereSize = 0.05;
-        // this sets the size of the box on the face of the cube that is used for extrusion of cube along a normal to that face
-        gizmo.scaleBoxSize = 0.03;
-        // this sets the speed to scale the cube w.r.t the drag speed of the mouse
-        gizmo.scaleDragSpeed = 1.5;
-        // attaching the mesh box to gizmo
-        gizmo.attachedMesh = boundingBox;
+        var box: Mesh = MeshBuilder.CreateBox("box", { width: boxWidth, height: boxHeight, depth: boxDepth }, scene);
+
+        let mouseHit = 1;
+        let selectedFacet = -1;
+
+        scene.onPointerDown = function (evt, pickResult) {
+            var face = pickResult.faceId / 2
+            var facet = 2 * Math.floor(face);
+            // console.log("facet::",selectedFacet);
+            
+            if(mouseHit == 1 && pickResult.hit) {
+                console.log("mouseHit::",mouseHit);
+                selectedFacet = facet;
+                mouseHit = 2;
+                console.log("selected facet::",selectedFacet);
+                firstPos = Vector3.Unproject(
+                    new Vector3(scene.pointerX,scene.pointerY,1),
+                    engine.getRenderWidth(),
+                    engine.getRenderHeight(),
+                    Matrix.Identity(), scene.getViewMatrix(),
+                    scene.getProjectionMatrix());
+                console.log(firstPos);
+            } else if(mouseHit == 2) {
+                console.log("mouseHit::",mouseHit);
+                mouseHit = 1;
+                selectedFacet = -1;
+            }
+        };
+
+        scene.onPointerMove = function (evt, pickResult) {
+            // var face = pickResult.faceId / 2;
+            // var facet = 2 * Math.floor(face);
+            console.log("selectedFacet::",selectedFacet);
+            if(selectedFacet != -1) {
+                console.log(selectedFacet);
+                secondPos = Vector3.Unproject(
+                    new Vector3(scene.pointerX,scene.pointerY,1),
+                    engine.getRenderWidth(),
+                    engine.getRenderHeight(),
+                    Matrix.Identity(), scene.getViewMatrix(),
+                    scene.getProjectionMatrix());
+                let dist = Vector3.Distance(firstPos, secondPos);
+                console.log("dist::",dist);
+                if(firstPos.x === secondPos.x || firstPos.y === secondPos.y || firstPos.z === secondPos.z) {
+                    return;
+                }
+
+                if(selectedFacet == 0) {
+                    if(firstPos.z == secondPos.z)
+                        return;
+                    else if(firstPos.z < secondPos.z) {
+                        box.scaling.z += dist/2e6;
+                        box.position.z += dist/2e6;
+                    }
+                    else {
+                        box.scaling.z -= dist/2e6;
+                        box.position.z -= dist/2e6;
+                    }
+                } else if (selectedFacet == 2) {
+                    if(firstPos.z == secondPos.z)
+                        return;
+                    else if(firstPos.z > secondPos.z) {
+                        box.scaling.z += dist/2e6;
+                        box.position.z -= dist/2e6;
+                    }
+                    else {
+                        box.scaling.z -= dist/2e6;
+                        box.position.z += dist/2e6;
+                    }
+                } else if (selectedFacet == 4) {
+                    if(firstPos.x == secondPos.x)
+                        return;
+                    else if(firstPos.x < secondPos.x) {
+                        box.scaling.x += dist/2e6;
+                        box.position.x += dist/2e6;
+                    }
+                    else {
+                        box.scaling.x -= dist/2e6;
+                        box.position.x -= dist/2e6;
+                    }
+                } else if (selectedFacet == 6) {
+                    if(firstPos.x == secondPos.x)
+                        return;
+                    else if(firstPos.x > secondPos.x) {
+                        box.scaling.x += dist/2e6;
+                        box.position.x -= dist/2e6;
+                    }
+                    else {
+                        box.scaling.x -= dist/2e6;
+                        box.position.x += dist/2e6;
+                    }
+                } else if (selectedFacet == 8) {
+                    if(firstPos.y == secondPos.y)
+                        return;
+                    else if(firstPos.y < secondPos.y) {
+                        box.scaling.y += dist/2e6;
+                        box.position.y += dist/2e6;
+                    }
+                    else {
+                        box.scaling.y -= dist/2e6;
+                        box.position.y -= dist/2e6;
+                    }
+                } else if (selectedFacet == 10) {
+                    if(firstPos.y == secondPos.y)
+                        return;
+                    else if(firstPos.y > secondPos.y) {
+                        box.scaling.y += dist/2e6;
+                        box.position.y -= dist/2e6;
+                    }
+                    else {
+                        box.scaling.y -= dist/2e6;
+                        box.position.y += dist/2e6;
+                    }
+                }
+            }
+        }
+
+        // add selection panel
+        // var advTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+        // var selectionPanel = new SelectionPanel("customPanel");
+        // selectionPanel.width = 0.25;
+        // selectionPanel.height = 0.48;
+        // selectionPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+        // selectionPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+        // advTexture.addControl(selectionPanel);
+
+        // var resizeToDefault = function() {
+        //     var positions = box.getVerticesData(VertexBuffer.PositionKind);
+        //     var numberOfVertices = positions!.length/3;	
+        //     for(var i = 0; i<numberOfVertices; i++) {
+        //         positions![i*3] = Math.sin(positions![i*3]) * 2;
+        //         positions![i*3+1] = Math.tan(positions![i*3+1]) * 3;
+        //         positions![i*3+2] = Math.cos(positions![i*3+2]) * 4;
+        //     }
+
+        //     box.updateVerticesData(VertexBuffer.PositionKind, positions!);
+        //     box.scaling.x = 1;
+        //     box.scaling.y = 1;
+        //     box.scaling.z = 1;
+        // }
+
+        // add button to resize the cube
+        // var transformGroup = new CheckboxGroup("Transformation");
+	    // transformGroup.addCheckbox("Resize", resizeToDefault);
+
+        // selectionPanel.addGroup(transformGroup);
+
+        // hide/show the Inspector
+        window.addEventListener("keydown", (ev) => {
+            // Shift+Ctrl+Alt+I
+            if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === 'i') {
+                if (scene.debugLayer.isVisible()) {
+                    scene.debugLayer.hide();
+                } else {
+                    scene.debugLayer.show();
+                }
+            }
+        });
 
         // run the main render loop
         engine.runRenderLoop(() => {
