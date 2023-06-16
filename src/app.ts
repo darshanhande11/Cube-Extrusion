@@ -4,6 +4,7 @@ import "@babylonjs/loaders/glTF";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, MultiPointerScaleBehavior, BoundingBoxGizmo, UtilityLayerRenderer, Color3, SixDofDragBehavior, VertexBuffer, Matrix } from "@babylonjs/core";
 import { SelectionPanel, Control, AdvancedDynamicTexture, CheckboxGroup } from "@babylonjs/gui"
 
+// random comment 1
 class App {
     constructor() {
         // create the canvas html element and attach it to the webpage
