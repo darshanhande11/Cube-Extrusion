@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, MultiPointerScaleBehavior, BoundingBoxGizmo, UtilityLayerRenderer, Color3, SixDofDragBehavior, VertexBuffer, Matrix, Color4, Vector2, AxesViewer } from "@babylonjs/core";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, MultiPointerScaleBehavior, BoundingBoxGizmo, UtilityLayerRenderer, Color3, SixDofDragBehavior, VertexBuffer, Matrix, Color4, Vector2, AxesViewer, Axis, Space, TransformNode } from "@babylonjs/core";
 
 class App {
     constructor() {
@@ -28,8 +28,26 @@ class App {
         box.edgesColor = new Color4(255, 69, 0, 1);
 
         // const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2});
+        var xRot = Math.PI / 4, yRot = 0, zRot = 0;
 
-        // box.rotation.x = Math.PI / 4;
+        var antiRotNode : any = new TransformNode("antiRotNode", scene);
+        box.parent = antiRotNode;
+        
+        // box.rotation.x = xRot;
+        // box.rotate(Axis.X, xRot, Space.WORLD);
+        // box.rotate(Axis.Y, yRot, Space.WORLD);
+        // box.rotate(Axis.Z, zRot, Space.WORLD);
+
+
+        // antiRotNode.rotate(Axis.X, xRot, Space.WORLD);
+        // antiRotNode.rotate(Axis.Y, yRot, Space.WORLD);
+        // antiRotNode.rotate(Axis.Z, zRot, Space.WORLD);
+
+        // var box_position = box.position.clone();
+        // box.position = Vector3.TransformCoordinates(box_position, antiRotNode.getWorldMatrix());
+
+        // var boxWorldMatrix = box.getWorldMatrix();
+        // console.log('box world matrix: ', box.getWorldMatrix());
 
         // var axes = new AxesViewer(scene, 2);
 
@@ -78,6 +96,11 @@ class App {
         scene.onPointerMove = function (evt, pickResult) {
             // only if the user has selected a face
             if(selectedFacet != -1) {
+                // var antiRotNode = new TransformNode("antiRotNode", scene);
+                // antiRotNode.rotation.x = -xRot;
+                // antiRotNode.rotation.y = -yRot;
+                // antiRotNode.rotation.z = -zRot;
+                // box.parent = antiRotNode;
                 // updating the firstPos to earlier secondPos
                 firstPos = secondPos;
                 // calculating the new secondPos since cursor has moved
@@ -90,7 +113,7 @@ class App {
                 // var moveVec = mmove(evt, prevX, prevY);
                 // calculating the distance between firstPos and secondPos
                 let dist = Vector3.Distance(firstPos, secondPos);
-                var moveVec = secondPos.subtract(firstPos);
+                var moveVec : any = secondPos.subtract(firstPos);
 
                 if(selectedFacet == 2 || selectedFacet == 3 || selectedFacet == 6 || selectedFacet == 7 || selectedFacet == 10 || selectedFacet == 11) {
                     moveVec = moveVec.negate();
@@ -108,7 +131,15 @@ class App {
                     scaleVec = fNorm.negate();
                 }
 
+                var theta :any = Math.acos(Vector3.Dot(fNorm, moveVec)/(fNorm.length() * moveVec.length()));
+                var extVec : any = moveVec.scaleInPlace(Math.cos(theta));
+                // console.log(extVec);
+                console.log(scaleVec);
+
                 scaleVec = scaleVec.scale(dist/5e3);
+                // extVec = extVec.scale(dist/5e4);
+                // console.log(scaleVec.y * Math.sin(xRot));
+                // console.log(scaleVec.z * Math.cos(xRot));
                 // Positions of vertices of the selected face of the cube are updated
                 for(let i = 0; i < faceIndicesSel.length; i++) {
                     var index = faceIndicesSel[i];
@@ -116,41 +147,17 @@ class App {
                     pos[index * 3 + 1] +=  scaleVec.y;
                     pos[index * 3 + 2] +=  scaleVec.z;
                 }
+                // console.log(pos);
                 box.updateVerticesData(VertexBuffer.PositionKind, pos);
                 box.refreshBoundingInfo();
                 box.enableEdgesRendering();
+                // box.parent = null;
             }
         }
 
         scene.onAfterRenderObservable.add(() => {
             const cursorPos = new Vector3(scene.pointerX, scene.pointerY, 0.99);
         });
-
-        // scene.onAfterRenderObservable.add(() => {
-        //     const screenPosition = new Vector3(scene.pointerX, scene.pointerY, 0.99);
-        //     const vector = Vector3.Unproject(
-        //         screenPosition,
-        //         engine.getRenderWidth(),
-        //         engine.getRenderHeight(),
-        //         Matrix.Identity(),
-        //         scene.getViewMatrix(),
-        //         scene.getProjectionMatrix()
-        //     );
-        //     sphere.position = vector;
-        // })
-        
-        function mmove(evt: any, prevX: number, prevY: number) {
-            var startViewportPos = new Vector2(prevX/canvas.width, prevY/canvas.height);
-            var endViewportPos = new Vector2(scene.pointerX/canvas.width, scene.pointerY/canvas.height);
-            prevX = scene.pointerX;
-            prevY = scene.pointerY;
-            var fray = scene.createPickingRay(startViewportPos.x, startViewportPos.y, Matrix.Identity(), camera);
-            var sray = scene.createPickingRay(endViewportPos.x, endViewportPos.y, Matrix.Identity(), camera);
-            var spt = fray.origin;
-            var ept = sray.origin;
-            var moveVec = ept.subtract(spt);
-            return moveVec;
-        }
 
         function setIndAttToFace() {
             // returns an array of 72 values which are the positions of the vertices of the cube
@@ -162,11 +169,13 @@ class App {
             // so 2 x 3 = 6 points for each face
             // and for 6 faces it is 6 x 6 = 36 points
             var fInd = box.getIndices();
+            // getting the id of the starting index of selected face from the face indices array
             var stInd = Math.floor(selectedFacet / 2) * 6;
             faceIndicesSel = [
                 fInd![stInd], fInd![stInd + 1], fInd![stInd + 2], fInd![stInd + 3], fInd![stInd + 4], fInd![stInd + 5]
             ];
 
+            // removing duplicate index values from the array
             faceIndicesSel = Array.from(new Set(faceIndicesSel));
 
             var selectedVertices :any = [[]];
